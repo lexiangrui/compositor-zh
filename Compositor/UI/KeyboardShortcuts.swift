@@ -54,12 +54,12 @@ struct ShortcutChord: Codable, Equatable, Hashable {
         return flags
     }
     var label: String {
-        if isNone { return "None" }
+        if isNone { return L("None") }
         let special = ["\u{7f}": "Delete", "\r": "Return", "\u{1b}": "Esc", "\t": "Tab", " ": "Space",
                        "\u{f702}": "←", "\u{f703}": "→", "\u{f701}": "↓", "\u{f700}": "↑"]
         return (modifiers & 4 != 0 ? "⌃" : "") + (modifiers & 2 != 0 ? "⌥" : "")
             + (modifiers & 8 != 0 ? "⇧" : "") + (modifiers & 1 != 0 ? "⌘" : "")
-            + (special[key] ?? key.uppercased())
+            + (special[key].map { L($0) } ?? key.uppercased())
     }
     func event(like event: NSEvent) -> NSEvent? {
         let codes: [String: UInt16] = ["\u{7f}": 51, "\r": 36, "\u{1b}": 53, "\t": 48, " ": 49,
@@ -77,12 +77,15 @@ struct ShortcutDefinition: Identifiable {
     let title: String
     let group: String
     let original: ShortcutChord
+    // The display text can vary with the language; the English title remains part of the saved ID.
+    var displayTitle: String? = nil
+    var localizedTitle: String { displayTitle ?? L(title) }
     var id: String { "\(group):\(title)" }
     var isMenu: Bool { group == "Menus" }
 
     static let all: [ShortcutDefinition] = {
-        func entry(_ title: String, _ key: String, _ modifiers: Int = 0, menu: Bool = false) -> ShortcutDefinition {
-            .init(title: title, group: menu ? "Menus" : "Canvas & Layers", original: ShortcutChord(key, modifiers))
+        func entry(_ title: String, _ key: String, _ modifiers: Int = 0, menu: Bool = false, displayTitle: String? = nil) -> ShortcutDefinition {
+            .init(title: title, group: menu ? "Menus" : "Canvas & Layers", original: ShortcutChord(key, modifiers), displayTitle: displayTitle)
         }
         var result: [ShortcutDefinition] = [
             entry("Undo", "z", 1, menu: true), entry("Redo", "z", 9, menu: true),
@@ -127,16 +130,22 @@ struct ShortcutDefinition: Identifiable {
         result += [entry("Decrease brush hardness", "[", 8), entry("Increase brush hardness", "]", 8),
                    entry("Previous blend mode", "-", 8), entry("Next blend mode", "=", 8),
                    entry("Cycle shape kind", "u", 8)]
-        for digit in 0...9 { result.append(entry("Opacity digit \(digit) (type two for exact %)", String(digit))) }
+        for digit in 0...9 {
+            result.append(entry("Opacity digit \(digit) (type two for exact %)", String(digit),
+                                displayTitle: L("Opacity digit %lld (type two for exact %%)", digit)))
+        }
         for (direction, key) in [("Left", "\u{f702}"), ("Right", "\u{f703}"), ("Up", "\u{f700}"), ("Down", "\u{f701}")] {
-            result += [entry("Nudge \(direction) 1 px", key), entry("Nudge \(direction) 10 px", key, 8),
-                       entry("Move selected pixels \(direction) 1 px", key, 1), entry("Move selected pixels \(direction) 10 px", key, 9)]
+            let name = L(direction)
+            result += [entry("Nudge \(direction) 1 px", key, displayTitle: L("Nudge %@ %lld px", name, 1)),
+                       entry("Nudge \(direction) 10 px", key, 8, displayTitle: L("Nudge %@ %lld px", name, 10)),
+                       entry("Move selected pixels \(direction) 1 px", key, 1, displayTitle: L("Move selected pixels %@ %lld px", name, 1)),
+                       entry("Move selected pixels \(direction) 10 px", key, 9, displayTitle: L("Move selected pixels %@ %lld px", name, 10))]
         }
         result.append(.init(title: "Finish editing text", group: "Text Editing", original: ShortcutChord("\r", 1)))
         for (title, key) in [("Decrease tracking", "\u{f702}"), ("Increase tracking", "\u{f703}"),
                              ("Decrease leading", "\u{f700}"), ("Increase leading", "\u{f701}")] {
             result.append(.init(title: title, group: "Text Editing", original: ShortcutChord(key, 2)))
-            result.append(.init(title: title + " by 10", group: "Text Editing", original: ShortcutChord(key, 10)))
+            result.append(.init(title: title + " by 10", group: "Text Editing", original: ShortcutChord(key, 10), displayTitle: L("%@ by 10", L(title))))
         }
         result.append(entry("Toggle Levels preview", "p", 2))
         return result
@@ -186,7 +195,7 @@ final class ShortcutSettings {
         return chord(definition)
     }
     func show() {
-        panel.show(title: "Keyboard Shortcuts", content: KeyboardShortcutsSheet(settings: self))
+        panel.show(title: L("Keyboard Shortcuts"), content: KeyboardShortcutsSheet(settings: self))
     }
     func close() { panel.close() }
     func save(_ values: [String: ShortcutChord]) {
@@ -200,15 +209,15 @@ final class ShortcutSettings {
         for definition in ShortcutDefinition.all {
             let chord = values[definition.id] ?? definition.original
             if chord.isNone { continue }
-            guard chord.key.count == 1, (0...15).contains(chord.modifiers) else { return "Choose a single key with optional modifiers." }
+            guard chord.key.count == 1, (0...15).contains(chord.modifiers) else { return L("Choose a single key with optional modifiers.") }
             if definition.group == "Text Editing", chord.modifiers & 7 == 0 {
-                return "Text-editing shortcuts need Command, Option, or Control so they do not replace normal typing."
+                return L("Text-editing shortcuts need Command, Option, or Control so they do not replace normal typing.")
             }
             if [ShortcutChord("q", 1), ShortcutChord(",", 1), ShortcutChord("m", 3)].contains(chord) {
-                return "\(chord.label) is reserved by macOS."
+                return L("%@ is reserved by macOS.", chord.label)
             }
-            if let other = assigned[chord] { return "\(chord.label) is assigned to both \(other) and \(definition.title)." }
-            assigned[chord] = definition.title
+            if let other = assigned[chord] { return L("%@ is assigned to both %@ and %@.", chord.label, other, definition.localizedTitle) }
+            assigned[chord] = definition.localizedTitle
         }
         return nil
     }
@@ -276,10 +285,10 @@ private struct KeyboardShortcutsSheet: View {
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 6) {
                     ForEach(["Menus", "Canvas & Layers", "Text Editing"], id: \.self) { group in
-                        Text(group).font(.headline).padding(.top, 8)
-                        ForEach(ShortcutDefinition.all.filter { $0.group == group && (search.isEmpty || $0.title.localizedCaseInsensitiveContains(search)) }) { definition in
+                        Text(L(group)).font(.headline).padding(.top, 8)
+                        ForEach(ShortcutDefinition.all.filter { $0.group == group && (search.isEmpty || $0.title.localizedCaseInsensitiveContains(search) || $0.localizedTitle.localizedCaseInsensitiveContains(search)) }) { definition in
                             HStack {
-                                Text(definition.title)
+                                Text(definition.localizedTitle)
                                 Spacer()
                                 ShortcutRecorder(chord: draft[definition.id] ?? definition.original,
                                     recording: recording == definition.id,
@@ -336,8 +345,8 @@ private struct ShortcutRecorder: NSViewRepresentable {
     func makeNSView(context: Context) -> RecorderButton { RecorderButton() }
     func updateNSView(_ button: RecorderButton, context: Context) {
         button.start = start; button.finish = finish; button.recording = recording
-        button.title = recording ? "Press keys…" : chord.label
-        button.setAccessibilityLabel(recording ? "Press a shortcut" : chord.label)
+        button.title = recording ? L("Press keys…") : chord.label
+        button.setAccessibilityLabel(recording ? L("Press a shortcut") : chord.label)
         if recording, button.window?.firstResponder !== button { button.window?.makeFirstResponder(button) }
     }
     final class RecorderButton: NSButton {

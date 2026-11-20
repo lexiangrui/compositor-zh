@@ -34,10 +34,10 @@ struct GIFTimeline: View {
                 }
                 .buttonStyle(.plain)
                 .disabled(!canPlay)
-                .help(isPlaying ? "Pause" : "Play")
+                .help(L(isPlaying ? "Pause" : "Play"))
                 // The delay as a menu of common ones, as the Layers panel's adjustment button offers its kinds.
                 Menu { delayMenu } label: {
-                    Text(timing.mode == .uniform ? "\(Int(delay.rounded()))ms" : originalDelays(spaced: false))
+                    Text(timing.mode == .uniform ? L("%lld ms", Int(delay.rounded())) : originalDelays(spaced: false))
                         .font(.system(size: 13)).foregroundStyle(.secondary)
                 }
                 .menuStyle(.button).buttonStyle(.plain).menuIndicator(.hidden).fixedSize()
@@ -111,7 +111,7 @@ struct GIFTimeline: View {
 
     /// Every frame for the same time, from a fast 20 ms up to a second, or each for the GIF's own.
     @ViewBuilder private var delayMenu: some View {
-        Toggle("\(originalDelays()) · Original", isOn: Binding(get: { timing.mode != .uniform }, set: { on in
+        Toggle(L("%@ · Original", originalDelays()), isOn: Binding(get: { timing.mode != .uniform }, set: { on in
             guard on else { return }
             var original = timing
             original.mode = .perFrame

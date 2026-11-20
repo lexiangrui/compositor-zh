@@ -13,6 +13,11 @@ final class CompositorApplicationDelegate: NSObject, NSApplicationDelegate {
         return environment["XCTestConfigurationFilePath"] != nil || environment["XCTestBundlePath"] != nil
             || NSClassFromString("XCTestCase") != nil
     }
+    /// A build without its own feed must not offer updates from another distribution.
+    static var hasUpdateFeed: Bool {
+        Bundle.main.object(forInfoDictionaryKey: "SUFeedURL") as? String != nil
+    }
+
     /// Checks the update feed and installs new versions (Sparkle), offering each one with what's new listed in it.
     /// Started only after launch: its first-run prompt, shown during launch, kept the editor window from ever opening.
     private let updateDriver = UpdateDriver()
@@ -97,9 +102,9 @@ final class CompositorApplicationDelegate: NSObject, NSApplicationDelegate {
             guard let menu = note.object as? NSMenu, let index = note.userInfo?["NSMenuItemIndex"] as? Int else { return }
             MainActor.assumeIsolated { Self.removeIfSystemExtra(at: index, in: menu) }
         }
+        // Not while tests host the app: an update out since this build would come up as a modal alert and stop them.
+        guard Self.hasUpdateFeed, !Self.runsTests else { return }
         DispatchQueue.main.asyncAfter(deadline: .now() + 1) { [weak self] in
-            // Not while tests host the app: an update out since this build would come up as a modal alert and stop them.
-            guard !Self.runsTests else { return }
             do { try self?.updater.start() } catch { NSLog("Sparkle didn't start: \(error)") }
             #if DEBUG
             // Trying an update against a local feed: check straight away.

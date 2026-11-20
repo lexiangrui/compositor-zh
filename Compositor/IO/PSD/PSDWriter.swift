@@ -33,12 +33,12 @@ nonisolated enum PSDWriter {
             let matching = notes.filter { $0.change == change }.map(\.layerName)
             guard !matching.isEmpty else { return nil }
             let shown = matching.prefix(3).map { "“\($0)”" }.joined(separator: ", ")
-            return matching.count > 3 ? "\(shown) and \(matching.count - 3) more" : shown
+            return matching.count > 3 ? L("%@ and %lld more", shown, matching.count - 3) : shown
         }
         let lines = [
-            names(.textAsPixels).map { "Text drawn as pixels: \($0)" },
-            names(.effectsAsPixels).map { "Effects drawn into the pixels: \($0)" },
-            names(.adjustmentLeftOut).map { "Adjustment layers left out: \($0)" },
+            names(.textAsPixels).map { L("Text drawn as pixels: %@", $0) },
+            names(.effectsAsPixels).map { L("Effects drawn into the pixels: %@", $0) },
+            names(.adjustmentLeftOut).map { L("Adjustment layers left out: %@", $0) },
         ].compactMap { $0 }
         return lines.isEmpty ? nil : lines.joined(separator: "\n")
     }

@@ -9,10 +9,10 @@ nonisolated enum NewCanvasUnit: String, CaseIterable, Sendable {
     /// The unit written out, for the summary line's pill.
     var name: String {
         switch self {
-        case .pixels: "Pixels"
-        case .inches: "Inches"
-        case .centimeters: "Centimeters"
-        case .millimeters: "Millimeters"
+        case .pixels: L("Pixels")
+        case .inches: L("Inches")
+        case .centimeters: L("Centimeters")
+        case .millimeters: L("Millimeters")
         }
     }
     /// The next unit, for the pill: px → in → cm → mm → px.
@@ -44,7 +44,13 @@ nonisolated enum NewCanvasUnit: String, CaseIterable, Sendable {
 /// What a new canvas starts as: see-through, or a Background layer of white or black.
 nonisolated enum NewCanvasBackground: String, CaseIterable, Sendable {
     case transparent, white, black
-    var title: String { "\(rawValue.capitalized) canvas" }
+    var title: String {
+        switch self {
+        case .transparent: L("Transparent canvas")
+        case .white: L("White canvas")
+        case .black: L("Black canvas")
+        }
+    }
     var next: NewCanvasBackground { Self.allCases[(Self.allCases.firstIndex(of: self)! + 1) % Self.allCases.count] }
     var color: CGColor? {
         switch self {
@@ -73,8 +79,8 @@ struct NewCanvasSheet: View {
     private var pixelHeight: Int? { unit.pixels(height, resolution: resolution) }
     private var valid: Bool { pixelWidth != nil && pixelHeight != nil }
     private var resolutionHelp: String {
-        let size = unit != .pixels ? pixelWidth.flatMap { w in pixelHeight.map { h in " · \(Int(resolution)) DPI: \(w) × \(h) pixels" } } : nil
-        return "Resolution: 72 for screens, 300 for print. Click to switch." + (size ?? "")
+        let size = unit != .pixels ? pixelWidth.flatMap { w in pixelHeight.map { h in L(" · %lld DPI: %lld × %lld pixels", Int(resolution), w, h) } } : nil
+        return L("Resolution: 72 for screens, 300 for print. Click to switch.") + (size ?? "")
     }
     /// Shows the sizes in another unit, the same canvas written differently.
     private func switchUnit(to new: NewCanvasUnit) {
@@ -101,7 +107,7 @@ struct NewCanvasSheet: View {
                             Text("Custom").tag(CanvasPreset?.none)
                             ForEach(CanvasPreset.groups.indices, id: \.self) { group in
                                 Divider()
-                                ForEach(CanvasPreset.groups[group]) { Text($0.title).tag(CanvasPreset?.some($0)) }
+                                ForEach(CanvasPreset.groups[group]) { Text(L($0.title)).tag(CanvasPreset?.some($0)) }
                             }
                         }
                         .pickerStyle(.inline).labelsHidden()
@@ -128,12 +134,12 @@ struct NewCanvasSheet: View {
             }
             // The settings are pills, each changed the same way: click to step to the next choice.
             HStack(spacing: 4) {
-                CyclePill(background.title, help: "Start see-through, or with a white or black Background layer. Click to switch.") {
+                CyclePill(background.title, help: L("Start see-through, or with a white or black Background layer. Click to switch.")) {
                     background = background.next
                 }
                 .accessibilityIdentifier("canvasBackground")
                 Text("·")
-                CyclePill(unit.name, help: "Units: pixels, inches, centimeters or millimeters. Click to switch.") {
+                CyclePill(unit.name, help: L("Units: pixels, inches, centimeters or millimeters. Click to switch.")) {
                     switchUnit(to: unit.next)
                 }
                 .accessibilityIdentifier("canvasUnit")
@@ -147,8 +153,8 @@ struct NewCanvasSheet: View {
             }
             .font(.callout).foregroundStyle(.secondary)
             if !valid {
-                Text(unit == .pixels ? "Enter whole numbers from 1 to \(DocumentLimits.maxSide.formatted()) pixels."
-                                     : "Enter a size up to \(DocumentLimits.maxSide.formatted()) pixels at this DPI.")
+                Text(L(unit == .pixels ? "Enter whole numbers from 1 to %@ pixels."
+                                       : "Enter a size up to %@ pixels at this DPI.", DocumentLimits.maxSide.formatted()))
                     .font(.callout).foregroundStyle(.orange)
             }
             HStack(spacing: 10) {
@@ -204,9 +210,9 @@ struct NewCanvasSheet: View {
     }
     private func dimension(_ title: String, text: Binding<String>, field: Field) -> some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text(title).font(.callout.weight(.medium))
+            Text(L(title)).font(.callout.weight(.medium))
             HStack {
-                TextField(title, text: text).textFieldStyle(.plain)
+                TextField(L(title), text: text).textFieldStyle(.plain)
                     .focused($focusedField, equals: field)
                     .accessibilityIdentifier(title.lowercased() + "Input")
                 Text(unit.rawValue).foregroundStyle(.secondary)

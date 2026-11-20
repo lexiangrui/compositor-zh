@@ -84,7 +84,7 @@ struct PSDExportTests {
         #expect(imported.layers.first { $0.name == "Green" }?.maskSourceID == importedRed.id)
         #expect(importedRed.mask != nil)
         #expect(imported.conversions.isEmpty, "\(imported.conversions.map(\.message))")
-        #expect(PSDWriter.summary(PSDWriter.notes(for: snapshot)) == "Adjustment layers left out: “Levels”")
+        #expect(PSDWriter.summary(PSDWriter.notes(for: snapshot)) == L("Adjustment layers left out: %@", "“Levels”"))
     }
 
     @Test func otherAppsSeeTheFlattenedPicture() async throws {

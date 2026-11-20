@@ -332,17 +332,17 @@ enum ColorPickerTarget: Equatable {
     case dialog(title: String)
     var title: String {
         switch self {
-        case .text: return "Color Picker (Text Color)"
-        case .shapeFill: return "Color Picker (Fill Color)"
-        case .shapeStroke: return "Color Picker (Stroke Color)"
-        case .effect(let kind): return "Color Picker (\(kind.rawValue) Color)"
-        case .palette(let background): return background ? "Color Picker (Background Color)" : "Color Picker (Foreground Color)"
-        case .gradientMap(let highlights): return highlights ? "Color Picker (Gradient Map Highlights)" : "Color Picker (Gradient Map Shadows)"
-        case .vignette: return "Color Picker (Vignette Color)"
-        case .rimLight(let index): return "Color Picker (Light \(index + 1))"
-        case .volumetricLight: return "Color Picker (Light Color)"
-        case .dither(let light): return light ? "Color Picker (Light Color)" : "Color Picker (Dark Color)"
-        case .dialog(let title): return "Color Picker (\(title))"
+        case .text: return L("Color Picker (Text Color)")
+        case .shapeFill: return L("Color Picker (Fill Color)")
+        case .shapeStroke: return L("Color Picker (Stroke Color)")
+        case .effect(let kind): return L("Color Picker (%@ Color)", kind.localizedName)
+        case .palette(let background): return background ? L("Color Picker (Background Color)") : L("Color Picker (Foreground Color)")
+        case .gradientMap(let highlights): return highlights ? L("Color Picker (Gradient Map Highlights)") : L("Color Picker (Gradient Map Shadows)")
+        case .vignette: return L("Color Picker (Vignette Color)")
+        case .rimLight(let index): return L("Color Picker (Light %lld)", index + 1)
+        case .volumetricLight: return L("Color Picker (Light Color)")
+        case .dither(let light): return light ? L("Color Picker (Light Color)") : L("Color Picker (Dark Color)")
+        case .dialog(let title): return L("Color Picker (%@)", L(title))
         }
     }
 }

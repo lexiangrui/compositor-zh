@@ -34,7 +34,7 @@ struct HueSaturationSheet: View {
         VStack(alignment: .leading, spacing: 16) {
             HStack(spacing: 12) {
                 Picker("Range", selection: settings.range) {
-                    ForEach(ColorRange.allCases, id: \.self) { Text($0.rawValue).tag($0) }
+                    ForEach(ColorRange.allCases, id: \.self) { Text($0.localizedName).tag($0) }
                 }
                 .pickerStyle(.menu).labelsHidden().frame(width: 160, alignment: .leading).disabled(current.colorize)
                 Spacer()
@@ -88,8 +88,8 @@ struct HueSaturationSheet: View {
                     .buttonStyle(.plain)
                     .background(session.hueSampleMode == mode ? Color.accentColor.opacity(0.25) : .clear,
                                 in: RoundedRectangle(cornerRadius: 4))
-                    .help(mode.help)
-                    .accessibilityLabel("\(mode.rawValue) color")
+                    .help(L(mode.help))
+                    .accessibilityLabel(L("%@ color", mode.localizedName))
                 }
                 Divider().frame(height: 16)
             }
@@ -125,13 +125,14 @@ struct HueSaturationSheet: View {
     /// A colored slider plus an exact field. A double-click on the title or knob resets that one value.
     private func slider(_ title: String, value: Binding<Double>, range: ClosedRange<Double>, unit: String,
                         track: CameraRawSliderTrack, reset: Double) -> some View {
-        HStack(spacing: 10) {
-            Text(title).frame(width: 76, alignment: .leading)
+        let localizedTitle = L(title)
+        return HStack(spacing: 10) {
+            Text(localizedTitle).frame(width: 76, alignment: .leading)
                 .onTapGesture(count: 2) { value.wrappedValue = reset }
                 .scrubbable(sensitivity: 1, value: value, range: range)
-            CameraRawSlider(value: value.wrappedValue, range: range, track: track, help: "\(title). Double-click to reset.",
+            CameraRawSlider(value: value.wrappedValue, range: range, track: track, help: L("%@. Double-click to reset.", localizedTitle),
                             onChange: { value.wrappedValue = $0.rounded() }, onReset: { value.wrappedValue = reset })
-            TextField(title, value: value, format: .number.precision(.fractionLength(0)))
+            TextField(localizedTitle, value: value, format: .number.precision(.fractionLength(0)))
                 .frame(width: 48).textFieldStyle(.roundedBorder).multilineTextAlignment(.trailing)
                 // A field's own submit swallows Return, so it confirms the window itself, as OK does.
                 .onSubmit {

@@ -1,4 +1,6 @@
-# Compositor
+# Compositor 简体中文版
+
+这是 [Compositor](https://github.com/robbietilton/Compositor) 的非官方简体中文分支。
 
 Adobe Photoshop costs too much and tools like GIMP don’t feel familiar enough for me to stay in flow. That’s why I built Compositor.
 
@@ -8,8 +10,11 @@ Because it’s open source, you can download the Xcode project and add, remove, 
 
 ## Installation
 
-### Download
-Get Compositor from [robbietilton.com/compositor](https://robbietilton.com/compositor), or download the latest release directly from [GitHub Releases](https://github.com/robbietilton/Compositor/releases/latest).
+### 简体中文版
+从本仓库的 [GitHub Releases](https://github.com/lexiangrui/compositor-zh/releases) 下载 `macOS-arm64.zip` 发布包，解压后打开应用。需要 Apple Silicon 和 macOS 26 或更高版本。发布包使用临时签名，未经 Apple 公证。
+
+### 原版 / Upstream
+Get the original Compositor from [robbietilton.com/compositor](https://robbietilton.com/compositor), or download the latest release directly from [GitHub Releases](https://github.com/robbietilton/Compositor/releases/latest).
 
 ### Homebrew
 
@@ -80,7 +85,7 @@ brew install --cask robbietilton-compositor
 - Keep working while a project saves
 - Photoshop-style keyboard shortcuts throughout, remappable in Edit > Keyboard Shortcuts
 - Drag a number's label to scrub its value, as in Photoshop
-- Automatic updates, signed and notarized
+- Automatic updates and notarization for the upstream distribution only
 
 ### Works with AI agents
 - AI agents and scripts can build and edit projects directly: a `.comp` is a folder of PNG layers and a manifest, and an open project updates live as it's written. See [Writing Compositor projects](docs/writing-comp-files.md)
@@ -92,7 +97,13 @@ brew install --cask robbietilton-compositor
 
 ## Translations
 
-Compositor is English only for now, and translation pull requests aren't being accepted. It's maintained by one person, every new string would need translating from then on, and translations in languages I don't read can't be reviewed. I'll revisit this once the app settles; until then, please don't open localization PRs.
+此分支提供简体中文界面，英文仍是默认回退语言。使用 Xcode 运行 `Compositor` scheme 时，可在 **Run → Options → App Language** 选择 **Chinese, Simplified**（简体中文）进行测试。应用随偏好语言选择界面，项目文件格式和已保存的快捷键保持不变。
+
+汉化发布包使用独立的应用标识，不会通过上游自动更新被原版替换。请从本仓库的 **Releases** 手动下载更新。
+
+To maintain the translation, use `Compositor/Localizable.xcstrings` for UI text and `Compositor/InfoPlist.xcstrings` for document type names. Use SwiftUI's localizable literal labels for static text and `L` for display strings built dynamically or passed to AppKit. Keep raw values, shortcut IDs, accessibility identifiers, and user-provided names independent of translation.
+
+This is an unofficial localization fork. Upstream Compositor does not accept translation pull requests; please report translation issues to this fork, not upstream.
 
 ## Other platforms
 

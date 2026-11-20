@@ -157,25 +157,26 @@ struct EffectsSheet: View {
             ColorSwatch(color: Color(red: Double(color?.red ?? 0), green: Double(color?.green ?? 0), blue: Double(color?.blue ?? 0)))
         }
         .buttonStyle(.plain)
-        .help(kind.rawValue + " color")
-        .accessibilityLabel(kind.rawValue + " color")
+        .help(L("%@ color", kind.localizedName))
+        .accessibilityLabel(L("%@ color", kind.localizedName))
     }
 
     private func slider(_ title: String, value: Binding<CGFloat>, range: ClosedRange<CGFloat>,
                         inputRange: ClosedRange<CGFloat>? = nil, unit: String) -> some View {
         let limits = inputRange ?? range
+        let localizedTitle = L(title)
         let setAmount: (Double) -> Void = { amount in
             guard amount.isFinite else { return }
             value.wrappedValue = min(limits.upperBound, max(limits.lowerBound, CGFloat(amount)))
         }
         return HStack(spacing: 10) {
-            Text(title).frame(width: 64, alignment: .leading)
+            Text(localizedTitle).frame(width: 64, alignment: .leading)
                 .scrubbable(sensitivity: 1, value: value, range: limits)
             // A manually entered larger value stays intact; only the thumb is pinned
             // to the end of the slider until the user drags it again.
             AppSlider(value: Binding(get: { min(range.upperBound, max(range.lowerBound, value.wrappedValue)) },
                                   set: { value.wrappedValue = $0 }), in: range)
-            TextField(title, value: Binding(get: { Double(value.wrappedValue) },
+            TextField(localizedTitle, value: Binding(get: { Double(value.wrappedValue) },
                                             set: setAmount),
                       format: .number.precision(.fractionLength(0)))
                 .frame(width: 48).textFieldStyle(.roundedBorder).multilineTextAlignment(.trailing)

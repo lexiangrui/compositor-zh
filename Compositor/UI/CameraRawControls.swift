@@ -51,9 +51,9 @@ struct CameraRawControls: View {
                 Button("Histogram") { session.filterEdit?.cameraRawScopeMode = .histogram }
                 Button("Vectorscope") { session.filterEdit?.cameraRawScopeMode = .vectorscope }
             }
-            .help(mode == .histogram
+            .help(L(mode == .histogram
                   ? "Tones from black on the left to white on the right: blacks, shadows, midtones, highlights, whites. Control-click to show the vectorscope."
-                  : "Hue around the wheel, saturation outward from the center. Control-click to show the histogram.")
+                  : "Hue around the wheel, saturation outward from the center. Control-click to show the histogram."))
             Text(readout)
                 .font(.caption.monospacedDigit())
                 .foregroundStyle(.secondary)
@@ -78,8 +78,8 @@ struct CameraRawControls: View {
                 .foregroundStyle(on ? (shadows ? Color.blue : Color.red) : Color.white.opacity(0.55))
         }
         .buttonStyle(.plain)
-        .help(shadows ? "Show clipped shadows in blue on the preview." : "Show clipped highlights in red on the preview.")
-        .accessibilityLabel(shadows ? "Shadow Clipping Indicator" : "Highlight Clipping Indicator")
+        .help(L(shadows ? "Show clipped shadows in blue on the preview." : "Show clipped highlights in red on the preview."))
+        .accessibilityLabel(L(shadows ? "Shadow Clipping Indicator" : "Highlight Clipping Indicator"))
     }
 
     private func graph(_ scope: CameraRawScope?, mode: CameraRawScopeMode) -> some View {
@@ -105,7 +105,7 @@ struct CameraRawControls: View {
                 }
             }
         }
-        .accessibilityLabel(mode == .histogram ? "RGB histogram" : "Vectorscope")
+        .accessibilityLabel(L(mode == .histogram ? "RGB histogram" : "Vectorscope"))
     }
 
     private func ribbon(_ bins: [Double], color: Color, peak: Double, in context: GraphicsContext, size: CGSize) {
@@ -131,12 +131,12 @@ struct CameraRawControls: View {
                         Image(systemName: expanded.contains(section) ? "chevron.down" : "chevron.right")
                             .font(.caption.weight(.semibold))
                             .frame(width: 12)
-                        Text(section.rawValue).font(.headline)
+                        Text(section.localizedName).font(.headline)
                     }
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel(section.rawValue)
+                .accessibilityLabel(section.localizedName)
                 Spacer(minLength: 0)
                 if section == .light, raw.adjustsLight {
                     eye(shown: session.filterEdit?.showsCameraRawLight ?? true, name: "Light", group: .light)
@@ -219,7 +219,7 @@ struct CameraRawControls: View {
                 Text("White Balance").frame(minWidth: Self.labelWidth, alignment: .leading)
                     .help("Auto balances the average color. Custom follows Temperature and Tint.")
                 Picker("White Balance", selection: Binding(get: { raw.whiteBalance }, set: setWhiteBalance)) {
-                    ForEach(CameraRawWhiteBalance.allCases, id: \.self) { Text($0.rawValue).tag($0) }
+                    ForEach(CameraRawWhiteBalance.allCases, id: \.self) { Text($0.localizedName).tag($0) }
                 }
                 .labelsHidden()
                 .help("Auto balances the average color. Custom follows Temperature and Tint.")
@@ -261,7 +261,7 @@ struct CameraRawControls: View {
             slider("Glow", \.glow, range: CameraRawSettings.unitRange, decimals: 0, clipping: nil,
                    help: "Spreads a glow from the bright areas.")
             Picker("Style", selection: Binding(get: { raw.glowStyle }, set: { style in update { $0.cameraRaw.glowStyle = style } })) {
-                ForEach(CameraRawGlowStyle.allCases, id: \.self) { Text($0.rawValue).tag($0) }
+                ForEach(CameraRawGlowStyle.allCases, id: \.self) { Text($0.localizedName).tag($0) }
             }
             .help("Diffusion is soft and wide, Bloom is tighter, and Halation is a red fringe.")
             VStack(alignment: .leading, spacing: 8) {
@@ -277,7 +277,7 @@ struct CameraRawControls: View {
             slider("Amount", \.vignetteAmount, range: CameraRawSettings.toneRange, decimals: 0, clipping: nil,
                    help: "Darkens or lightens the edges. The center does not change.")
             Picker("Style", selection: Binding(get: { raw.vignetteStyle }, set: { style in update { $0.cameraRaw.vignetteStyle = style } })) {
-                ForEach(CameraRawVignetteStyle.allCases, id: \.self) { Text($0.rawValue).tag($0) }
+                ForEach(CameraRawVignetteStyle.allCases, id: \.self) { Text($0.localizedName).tag($0) }
             }
             .help("Highlight Priority protects bright edges. Color Priority also reduces color. Paint Overlay covers the edges evenly.")
             VStack(alignment: .leading, spacing: 8) {
@@ -320,8 +320,8 @@ struct CameraRawControls: View {
             Image(systemName: shown ? "eye" : "eye.slash")
         }
         .buttonStyle(.borderless)
-        .help(shown ? "Hide \(name) in the preview" : "Show \(name) in the preview")
-        .accessibilityLabel(shown ? "Hide \(name)" : "Show \(name)")
+        .help(shown ? L("Hide %@ in the preview", L(name)) : L("Show %@ in the preview", L(name)))
+        .accessibilityLabel(shown ? L("Hide %@", L(name)) : L("Show %@", L(name)))
     }
 
     /// Puts an adjusted section back to its defaults.
@@ -331,32 +331,34 @@ struct CameraRawControls: View {
         }
         .buttonStyle(.borderless)
         .disabled(session.filterEdit?.committing == true)
-        .help("Reset \(group.rawValue) to its defaults")
-        .accessibilityLabel("Reset \(group.rawValue)")
+        .help(L("Reset %@ to its defaults", group.localizedName))
+        .accessibilityLabel(L("Reset %@", group.localizedName))
     }
 
     private func slider(_ title: String, _ key: WritableKeyPath<CameraRawSettings, Double>, range: ClosedRange<Double>,
                         decimals: Int, clipping: CameraRawClipping?, track: CameraRawSliderTrack = .plain,
                         reset resetValue: Double = 0, help: String) -> some View {
         let step = pow(10, Double(decimals))
+        let localizedTitle = L(title)
+        let localizedHelp = L(help)
         return HStack(spacing: 10) {
-            Text(title)
+            Text(localizedTitle)
                 .frame(minWidth: Self.labelWidth, alignment: .leading)
-                .help(help)
+                .help(localizedHelp)
                 .onTapGesture(count: 2) { reset(key, to: resetValue) }
                 .scrubbable(sensitivity: 1 / step,
                             value: Binding(get: { raw[keyPath: key] }, set: { assign(key, $0, clipping: nil) }),
                             range: range)
-            CameraRawSlider(value: raw[keyPath: key], range: range, track: track, help: help,
+            CameraRawSlider(value: raw[keyPath: key], range: range, track: track, help: localizedHelp,
                             onChange: { rawValue in assign(key, (rawValue * step).rounded() / step, clipping: clipping) },
                             onReset: { reset(key, to: resetValue) })
-            TextField(title, value: Binding(get: { raw[keyPath: key] }, set: { assign(key, $0, clipping: nil) }),
+            TextField(localizedTitle, value: Binding(get: { raw[keyPath: key] }, set: { assign(key, $0, clipping: nil) }),
                       format: .number.precision(.fractionLength(0...decimals)))
                 .frame(width: 56).textFieldStyle(.roundedBorder).multilineTextAlignment(.trailing)
-                .help(help)
+                .help(localizedHelp)
         }
         .accessibilityElement(children: .contain)
-        .accessibilityLabel(title)
+        .accessibilityLabel(localizedTitle)
     }
 
     private func setWhiteBalance(_ mode: CameraRawWhiteBalance) {

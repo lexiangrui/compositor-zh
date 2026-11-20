@@ -177,7 +177,7 @@ struct ColorPickerSheet: View {
                 .focused($focusedChannel, equals: index)
                 .onSubmit { finish(true) }
                 .arrowSteps(value: { Double(channelValue.wrappedValue) }, change: { set(Int($0.rounded())) })
-                .accessibilityLabel(label == "R" ? "Red" : label == "G" ? "Green" : "Blue")
+                .accessibilityLabel(L(label == "R" ? "Red" : label == "G" ? "Green" : "Blue"))
         }
     }
 
@@ -263,7 +263,7 @@ struct DialogColorSwatch: View {
             ColorSwatch(color: color.swiftUI)
         }
         .buttonStyle(.plain)
-        .accessibilityLabel(title)
+        .accessibilityLabel(L(title))
         .onChange(of: session.colorPicker?.color) { _, _ in session.previewDialogColor() }
         .onDisappear { Self.closePicker(session) }
     }

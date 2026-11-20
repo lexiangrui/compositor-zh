@@ -22,21 +22,21 @@ struct ShapeControls: View {
                 session.cancelShape()
                 session.shapeKind = kind
             })) {
-                ForEach(ShapeKind.allCases, id: \.self) { Text($0.rawValue).tag($0) }
+                ForEach(ShapeKind.allCases, id: \.self) { Text($0.localizedName).tag($0) }
             }
             .pickerStyle(.segmented).labelsHidden().fixedSize()
             .help("Shift-U (or Tab) steps through Rectangle, Ellipse and Line")
             HStack(spacing: 6) {
-                Text(showsStroke ? "Fill" : "Color")
+                Text(L(showsStroke ? "Fill" : "Color"))
                 Button { session.openShapeFillPicker() } label: {
                     ColorSwatch(color: Color(nsColor: session.displayedShapeFill.nsColor))
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel("Fill color")
-                .help(editsLine ? "Color of the selected line"
+                .help(L(editsLine ? "Color of the selected line"
                       : session.shapeKind == .line ? "Color of the next line"
                       : editsSelection ? "Fill color of the selected shape"
-                      : "Shapes fill with the foreground color; click to change it")
+                      : "Shapes fill with the foreground color; click to change it"))
             }
             if showsStroke {
                 HStack(spacing: 6) {
@@ -79,25 +79,25 @@ struct ShapeControls: View {
                     Picker("Style", selection: Binding(get: { session.displayedLineStyle },
                                                       set: { session.setDisplayedLineStyle($0) })) {
                         ForEach(ShapeLineStyle.allCases, id: \.self) { style in
-                            Image(nsImage: LineSample.style(style)).accessibilityLabel(style.rawValue).tag(style)
+                            Image(nsImage: LineSample.style(style)).accessibilityLabel(style.localizedName).tag(style)
                         }
                     }
                     .pickerStyle(.menu).labelsHidden().fixedSize()
                 }
-                .help(editsLine ? "Dashes of the selected line; they grow with its width"
-                      : "Solid, dashed or dotted; dashes grow with the line's width")
+                .help(L(editsLine ? "Dashes of the selected line; they grow with its width"
+                      : "Solid, dashed or dotted; dashes grow with the line's width"))
                 HStack(spacing: 6) {
                     Text("Cap")
                     Picker("Cap", selection: Binding(get: { session.displayedLineCap },
                                                     set: { session.setDisplayedLineCap($0) })) {
                         ForEach(ShapeLineCap.allCases, id: \.self) { cap in
-                            Label { Text(cap.rawValue) } icon: { Image(nsImage: LineSample.cap(cap)) }.tag(cap)
+                            Label { Text(cap.localizedName) } icon: { Image(nsImage: LineSample.cap(cap)) }.tag(cap)
                         }
                     }
                     .pickerStyle(.menu).labelsHidden().fixedSize()
                 }
-                .help(editsLine ? "How this line's ends are finished"
-                      : "How the line's ends, and each of its dashes and dots, are finished")
+                .help(L(editsLine ? "How this line's ends are finished"
+                      : "How the line's ends, and each of its dashes and dots, are finished"))
             }
             if showsRadius {
                 HStack(spacing: 6) {
@@ -112,17 +112,17 @@ struct ShapeControls: View {
                         .arrowSteps(value: { session.displayedCornerRadius },
                                     change: { session.setDisplayedCornerRadius($0) })
                 }
-                .help(editsSelection
+                .help(L(editsSelection
                       ? "Round this rectangle's corners by this many pixels; 0 keeps them square"
-                      : "Round the rectangle's corners by this many pixels; 0 keeps them square")
+                      : "Round the rectangle's corners by this many pixels; 0 keeps them square"))
                 Toggle("Smooth Corners", isOn: Binding(get: { session.displayedShapeSmoothing },
                                                       set: { session.setDisplayedShapeSmoothing($0) }))
                     .toggleStyle(.checkbox)
                     .fixedSize()
                     .disabled(session.displayedCornerRadius <= 0)
-                    .help(session.displayedCornerRadius <= 0
+                    .help(L(session.displayedCornerRadius <= 0
                           ? "Set a radius above 0 to use smooth corners."
-                          : "Use smooth squircle corners at 60% smoothing, matching Figma's iOS setting")
+                          : "Use smooth squircle corners at 60% smoothing, matching Figma's iOS setting"))
             }
             Spacer(minLength: 0)
         }
